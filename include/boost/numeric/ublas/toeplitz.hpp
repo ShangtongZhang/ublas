@@ -1,3 +1,12 @@
+//
+//  Copyright (c) 2016
+//  Shangtong Zhang
+//
+//  Distributed under the Boost Software License, Version 1.0. (See
+//  accompanying file LICENSE_1_0.txt or copy at
+//  http://www.boost.org/LICENSE_1_0.txt)
+//
+
 #ifndef _BOOST_UBLAS_TOEPLITZ_
 #define _BOOST_UBLAS_TOEPLITZ_
 
@@ -6,6 +15,11 @@
 
 namespace boost { namespace numeric { namespace ublas {
     
+    /** \brief A toeplitz matrix of values of type \c T.
+     *
+     * \tparam T the type of object stored in the matrix (like double, float, complex, etc...)
+     * \tparam A the type of Storage array. Default is \c unbounded_array
+     */
     template<class T, class A = unbounded_array<T> >
     class toeplitz_matrix:
         public matrix_container<toeplitz_matrix<T, A> > {
@@ -24,6 +38,7 @@ namespace boost { namespace numeric { namespace ublas {
             typedef matrix_reference<self_type> closure_type;
         private:
         public:
+            // Construction and destruction
             BOOST_UBLAS_INLINE
             toeplitz_matrix ():
                 matrix_container<self_type>(),
@@ -49,11 +64,13 @@ namespace boost { namespace numeric { namespace ublas {
                 size1_(column.size()), size2_(row.size()), data_(row.size() + column.size() - 1) {
                     BOOST_UBLAS_CHECK(row.size(), external_logic());
                     BOOST_UBLAS_CHECK(column.size(), external_logic());
+                    // Ther first element of the row and the column must be the same.
                     BOOST_UBLAS_CHECK(row[0] == column[0], external_logic());
                     std::copy(column.rbegin(), column.rend(), data ().begin());
                     std::copy(row.begin() + 1, row.end(), data ().begin() + column.size());
             }
             
+            // Accessors
             BOOST_UBLAS_INLINE
             size_type size1() const {
                 return size1_;
@@ -63,6 +80,7 @@ namespace boost { namespace numeric { namespace ublas {
                 return size2_;
             }
             
+            // Storage accessors
             BOOST_UBLAS_INLINE
             const array_type& data() const {
                 return data_;
@@ -85,6 +103,11 @@ namespace boost { namespace numeric { namespace ublas {
                 }
             }
             
+            /** 
+             * Element access
+             * In toeplitz matrix, once an element is changed, all the elements 
+             * in the corresponding diagonal line will be changed.
+             */
             BOOST_UBLAS_INLINE
             const_reference operator () (size_type i, size_type j) const {
                 BOOST_UBLAS_CHECK (i < size1_, bad_index ());
@@ -107,6 +130,7 @@ namespace boost { namespace numeric { namespace ublas {
                 }
             }
             
+            // Element assignment
             BOOST_UBLAS_INLINE
             reference insert_element (size_type i, size_type j, const_reference t) {
                 return (operator () (i, j) = t);
@@ -116,11 +140,13 @@ namespace boost { namespace numeric { namespace ublas {
                 operator () (i, j) = value_type();
             }
             
+            // Zeroing
             BOOST_UBLAS_INLINE
             void clear () {
                 std::fill (data ().begin(), data ().end(), value_type());
             }
             
+            // Assignment
             BOOST_UBLAS_INLINE
             toeplitz_matrix& operator = (const toeplitz_matrix& m) {
                 size1_ = m.size1_;
@@ -129,6 +155,7 @@ namespace boost { namespace numeric { namespace ublas {
                 return *this;
             }
             
+            // Swapping
             BOOST_UBLAS_INLINE
             void swap (toeplitz_matrix& m) {
                 if (this != &m) {
@@ -143,11 +170,18 @@ namespace boost { namespace numeric { namespace ublas {
                 m1.swap (m2);
             }
             
+            // Iterator types
             class iterator1;
             class const_iterator1;
             class iterator2;
             class const_iterator2;
             
+            typedef reverse_iterator_base1<const_iterator1> const_reverse_iterator1;
+            typedef reverse_iterator_base1<iterator1> reverse_iterator1;
+            typedef reverse_iterator_base2<const_iterator2> const_reverse_iterator2;
+            typedef reverse_iterator_base2<iterator2> reverse_iterator2;
+            
+            // Iterators simply are indices.
             class const_iterator1:
             public container_const_reference<toeplitz_matrix>,
             public random_access_iterator_base<packed_random_access_iterator_tag, const_iterator1, value_type> {
@@ -157,6 +191,10 @@ namespace boost { namespace numeric { namespace ublas {
                 typedef typename toeplitz_matrix::const_reference reference;
                 typedef typename toeplitz_matrix::pointer pointer;
                 
+                typedef const_iterator2 dual_iterator_type;
+                typedef const_reverse_iterator2 dual_reverse_iterator_type;
+                
+                // Construction and destruction
                 BOOST_UBLAS_INLINE
                 const_iterator1 ():
                     container_const_reference<self_type> (), it1_(), it2_() {};
@@ -167,6 +205,7 @@ namespace boost { namespace numeric { namespace ublas {
                 const_iterator1 (const iterator1& it):
                     container_const_reference<self_type> (it()), it1_(it.it1_), it2_(it.it2_) {}
                 
+                // Arithmetic
                 BOOST_UBLAS_INLINE
                 const_iterator1& operator ++ () {
                     ++ it1_;
@@ -194,6 +233,7 @@ namespace boost { namespace numeric { namespace ublas {
                     return it1_ - it.it1_;
                 }
                 
+                // Dereference
                 BOOST_UBLAS_INLINE
                 const_reference operator * () const {
                     return (*this) () (it1_, it2_);
@@ -204,25 +244,67 @@ namespace boost { namespace numeric { namespace ublas {
                 }
                 
                 BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
                 const_iterator2 begin() const {
                     return const_iterator2((*this) (), it1_, 0);
                 }
                 
                 BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
                 const_iterator2 cbegin() const {
                     return begin();
                 }
                 
                 BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
                 const_iterator2 end() const {
                     return const_iterator2((*this) (), it1_, (*this) ().size2());
                 }
                 
                 BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
                 const_iterator2 cend() const {
                     return end();
                 }
                 
+                BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
+                const_reverse_iterator2 rbegin () const {
+                    return const_reverse_iterator2 (end ());
+                }
+                BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
+                const_reverse_iterator2 crbegin () const {
+                    return rbegin ();
+                }
+                BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
+                const_reverse_iterator2 rend () const {
+                    return const_reverse_iterator2 (begin ());
+                }
+                BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
+                const_reverse_iterator2 crend () const {
+                    return rend ();
+                }
+                
+                // Indices
                 BOOST_UBLAS_INLINE
                 size_type index1() const {
                     return it1_;
@@ -233,6 +315,7 @@ namespace boost { namespace numeric { namespace ublas {
                     return it2_;
                 }
                 
+                // Assignment
                 BOOST_UBLAS_INLINE
                 const_iterator1 &operator = (const const_iterator1 &it) {
                     container_const_reference<self_type>::assign (&it ());
@@ -241,6 +324,7 @@ namespace boost { namespace numeric { namespace ublas {
                     return *this;
                 }
                 
+                // Comparison
                 BOOST_UBLAS_INLINE
                 bool operator == (const const_iterator1 &it) const {
                     BOOST_UBLAS_CHECK (&(*this) () == &it (), external_logic ());
@@ -286,6 +370,10 @@ namespace boost { namespace numeric { namespace ublas {
                 typedef typename toeplitz_matrix::reference reference;
                 typedef typename toeplitz_matrix::pointer pointer;
                 
+                typedef iterator2 dual_iterator_type;
+                typedef reverse_iterator2 dual_reverse_iterator_type;
+                
+                // Construction and destruction
                 BOOST_UBLAS_INLINE
                 iterator1 ():
                 container_reference<self_type> (), it1_(), it2_() {};
@@ -293,6 +381,7 @@ namespace boost { namespace numeric { namespace ublas {
                 iterator1 (self_type&m, size_type it1, size_type it2):
                 container_reference<self_type> (m), it1_(it1), it2_(it2) {};
                 
+                // Arithmetic
                 BOOST_UBLAS_INLINE
                 iterator1& operator ++ () {
                     ++ it1_;
@@ -320,6 +409,7 @@ namespace boost { namespace numeric { namespace ublas {
                     return it1_ - it.it1_;
                 }
                 
+                // Dereference
                 BOOST_UBLAS_INLINE
                 reference operator * () const {
                     return (*this) ()(it1_, it2_);
@@ -330,15 +420,37 @@ namespace boost { namespace numeric { namespace ublas {
                 }
                 
                 BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
                 iterator2 begin() const {
                     return iterator2((*this) (), it1_, 0);
                 }
                 
                 BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
                 iterator2 end() const {
                     return iterator2((*this) (), it1_, (*this) ().size2());
                 }
                 
+                BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
+                reverse_iterator2 rbegin () const {
+                    return reverse_iterator2 (end ());
+                }
+                BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
+                reverse_iterator2 rend () const {
+                    return reverse_iterator2 (begin ());
+                }
+                
+                // Indices
                 BOOST_UBLAS_INLINE
                 size_type index1() const {
                     return it1_;
@@ -349,6 +461,7 @@ namespace boost { namespace numeric { namespace ublas {
                     return it2_;
                 }
                 
+                // Assignment
                 BOOST_UBLAS_INLINE
                 iterator1 &operator = (const iterator1 &it) {
                     container_reference<self_type>::assign (&it ());
@@ -357,6 +470,7 @@ namespace boost { namespace numeric { namespace ublas {
                     return *this;
                 }
                 
+                // Comparison
                 BOOST_UBLAS_INLINE
                 bool operator == (const iterator1 &it) const {
                     BOOST_UBLAS_CHECK (&(*this) () == &it (), external_logic ());
@@ -395,6 +509,10 @@ namespace boost { namespace numeric { namespace ublas {
                 typedef typename toeplitz_matrix::const_reference reference;
                 typedef typename toeplitz_matrix::pointer pointer;
                 
+                typedef const_iterator1 dual_iterator_type;
+                typedef const_reverse_iterator1 dual_reverse_iterator_type;
+                
+                // Construction and destruction
                 BOOST_UBLAS_INLINE
                 const_iterator2 ():
                 container_const_reference<self_type> (), it1_(), it2_() {};
@@ -405,6 +523,7 @@ namespace boost { namespace numeric { namespace ublas {
                 const_iterator2 (const iterator2& it):
                 container_const_reference<self_type> (it()), it1_(it.it1_), it2_(it.it2_) {}
                 
+                // Arithmetic
                 BOOST_UBLAS_INLINE
                 const_iterator2& operator ++ () {
                     ++ it2_;
@@ -432,6 +551,7 @@ namespace boost { namespace numeric { namespace ublas {
                     return it2_ - it.it2_;
                 }
                 
+                // Dereference
                 BOOST_UBLAS_INLINE
                 const_reference operator * () const {
                     return (*this) () (it1_, it2_);
@@ -442,25 +562,67 @@ namespace boost { namespace numeric { namespace ublas {
                 }
                 
                 BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
                 const_iterator1 begin() const {
                     return const_iterator1((*this) (), 0, it2_);
                 }
                 
                 BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
                 const_iterator1 cbegin() const {
                     return begin();
                 }
                 
                 BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
                 const_iterator1 end() const {
                     return const_iterator1((*this) (), (*this) ().size1(), it2_);
                 }
                 
                 BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
                 const_iterator1 cend() const {
                     return end();
                 }
+               
+                BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
+                const_reverse_iterator1 rbegin () const {
+                    return const_reverse_iterator1 (end ());
+                }
+                BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
+                const_reverse_iterator1 crbegin () const {
+                    return rbegin ();
+                }
+                BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
+                const_reverse_iterator1 rend () const {
+                    return const_reverse_iterator1 (begin ());
+                }
+                BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
+                const_reverse_iterator1 crend () const {
+                    return rend ();
+                }
                 
+                // Indices
                 BOOST_UBLAS_INLINE
                 size_type index1() const {
                     return it1_;
@@ -471,6 +633,7 @@ namespace boost { namespace numeric { namespace ublas {
                     return it2_;
                 }
                 
+                // Assignment
                 BOOST_UBLAS_INLINE
                 const_iterator2 &operator = (const const_iterator2 &it) {
                     container_const_reference<self_type>::assign (&it ());
@@ -479,6 +642,7 @@ namespace boost { namespace numeric { namespace ublas {
                     return *this;
                 }
                 
+                // Comparison
                 BOOST_UBLAS_INLINE
                 bool operator == (const const_iterator2 &it) const {
                     BOOST_UBLAS_CHECK (&(*this) () == &it (), external_logic ());
@@ -524,6 +688,10 @@ namespace boost { namespace numeric { namespace ublas {
                 typedef typename toeplitz_matrix::reference reference;
                 typedef typename toeplitz_matrix::pointer pointer;
                 
+                typedef iterator1 dual_iterator_type;
+                typedef reverse_iterator1 dual_reverse_iterator_type;
+                
+                // Construction and destruction
                 BOOST_UBLAS_INLINE
                 iterator2 ():
                 container_reference<self_type> (), it1_(), it2_() {};
@@ -531,6 +699,7 @@ namespace boost { namespace numeric { namespace ublas {
                 iterator2 (self_type&m, size_type it1, size_type it2):
                 container_reference<self_type> (m), it1_(it1), it2_(it2) {};
                 
+                // Arithmetic
                 BOOST_UBLAS_INLINE
                 iterator2& operator ++ () {
                     ++ it2_;
@@ -558,6 +727,7 @@ namespace boost { namespace numeric { namespace ublas {
                     return it2_ - it.it2_;
                 }
                 
+                // Dereference
                 BOOST_UBLAS_INLINE
                 reference operator * () const {
                     return (*this) ()(it1_, it2_);
@@ -568,15 +738,37 @@ namespace boost { namespace numeric { namespace ublas {
                 }
                 
                 BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
                 iterator1 begin() const {
                     return iterator1((*this) (), 0, it2_);
                 }
                 
                 BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
                 iterator1 end() const {
                     return iterator1((*this) (), (*this) ().size1(), it2_);
                 }
                 
+                BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
+                reverse_iterator1 rbegin () const {
+                    return reverse_iterator1 (end ());
+                }
+                BOOST_UBLAS_INLINE
+#ifdef BOOST_UBLAS_MSVC_NESTED_CLASS_RELATION
+                typename self_type::
+#endif
+                reverse_iterator1 rend () const {
+                    return reverse_iterator1 (begin ());
+                }
+                
+                // Indices
                 BOOST_UBLAS_INLINE
                 size_type index1() const {
                     return it1_;
@@ -587,6 +779,7 @@ namespace boost { namespace numeric { namespace ublas {
                     return it2_;
                 }
                 
+                // Assignment
                 BOOST_UBLAS_INLINE
                 iterator2 &operator = (const iterator2 &it) {
                     container_reference<self_type>::assign (&it ());
@@ -595,6 +788,7 @@ namespace boost { namespace numeric { namespace ublas {
                     return *this;
                 }
                 
+                // Comparison
                 BOOST_UBLAS_INLINE
                 bool operator == (const iterator2 &it) const {
                     BOOST_UBLAS_CHECK (&(*this) () == &it (), external_logic ());
@@ -622,6 +816,60 @@ namespace boost { namespace numeric { namespace ublas {
             BOOST_UBLAS_INLINE
             iterator2 end2 () {
                 return iterator2(*this, 0, size2_);
+            }
+            
+            // Reverse iterators
+            
+            BOOST_UBLAS_INLINE
+            const_reverse_iterator1 rbegin1 () const {
+                return const_reverse_iterator1 (end1 ());
+            }
+            BOOST_UBLAS_INLINE
+            const_reverse_iterator1 crbegin1 () const {
+                return rbegin1 ();
+            }
+            BOOST_UBLAS_INLINE
+            const_reverse_iterator1 rend1 () const {
+                return const_reverse_iterator1 (begin1 ());
+            }
+            BOOST_UBLAS_INLINE
+            const_reverse_iterator1 crend1 () const {
+                return rend1 ();
+            }
+            
+            BOOST_UBLAS_INLINE
+            reverse_iterator1 rbegin1 () {
+                return reverse_iterator1 (end1 ());
+            }
+            BOOST_UBLAS_INLINE
+            reverse_iterator1 rend1 () {
+                return reverse_iterator1 (begin1 ());
+            }
+            
+            BOOST_UBLAS_INLINE
+            const_reverse_iterator2 rbegin2 () const {
+                return const_reverse_iterator2 (end2 ());
+            }
+            BOOST_UBLAS_INLINE
+            const_reverse_iterator2 crbegin2 () const {
+                return rbegin2 ();
+            }
+            BOOST_UBLAS_INLINE
+            const_reverse_iterator2 rend2 () const {
+                return const_reverse_iterator2 (begin2 ());
+            }
+            BOOST_UBLAS_INLINE
+            const_reverse_iterator2 crend2 () const {
+                return rend2 ();
+            }
+            
+            BOOST_UBLAS_INLINE
+            reverse_iterator2 rbegin2 () {
+                return reverse_iterator2 (end2 ());
+            }
+            BOOST_UBLAS_INLINE
+            reverse_iterator2 rend2 () {
+                return reverse_iterator2 (begin2 ());
             }
             
         private:
